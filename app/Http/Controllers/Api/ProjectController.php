@@ -7,6 +7,7 @@ use App\Http\Requests\ProjectRequest;
 use App\Http\Resources\ProjectCollection;
 use App\Http\Resources\ProjectResource;
 use App\Services\ProjectService;
+use Illuminate\Http\Request;
 
 class ProjectController extends Controller
 {
@@ -17,13 +18,16 @@ class ProjectController extends Controller
     //     $this->service = $service;
     // }
 
+    // New way of injecting dependencies
     public function __construct(
         protected ProjectService $service
     ) {}
 
-    public function index()
+    public function index(Request $request)
     {
-        $projects = $this->service->list();
+        $perPage = (int) $request->query('per_page', 15);
+
+        $projects = $this->service->list($perPage);
 
         return new ProjectCollection($projects);
     }

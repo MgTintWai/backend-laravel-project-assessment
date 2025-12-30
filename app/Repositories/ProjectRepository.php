@@ -17,4 +17,9 @@ class ProjectRepository extends BaseRepository implements ProjectInterface
     {
         return $this->model->where('name', 'LIKE', "%{$name}%")->get();
     }
+
+    public function findAllPaginated(int $perPage = 15)
+    {
+        return $this->model->orderBy('created_at', 'desc')->paginate($perPage);
+    }
 }
