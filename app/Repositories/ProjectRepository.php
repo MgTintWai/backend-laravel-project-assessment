@@ -20,6 +20,9 @@ class ProjectRepository extends BaseRepository implements ProjectInterface
 
     public function findAllPaginated(int $perPage = 15)
     {
-        return $this->model->orderBy('created_at', 'desc')->paginate($perPage);
+        return $this->model
+            ->select('id', 'name', 'start_date', 'end_date')
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
     }
 }

@@ -16,28 +16,57 @@
 namespace App\Observers;
 
 use App\Models\Project;
-use Illuminate\Support\Facades\Cache;
+// use Illuminate\Support\Facades\Cache;
 
 class ProjectObserver
 {
     public function saved(Project $project)
     {
-        $this->clearCachedPages();
+        $this->flushProjectCache();
     }
 
     public function deleted(Project $project)
     {
-        $this->clearCachedPages();
+        $this->flushProjectCache();
     }
 
-    protected function clearCachedPages()
+    public function restored(Project $project)
+    {
+        $this->flushProjectCache();
+    }
+
+    public function forceDeleted(Project $project)
+    {
+        $this->flushProjectCache();
+    }
+
+    protected function flushProjectCache(): void
     {
         $service = app(\App\Services\ProjectService::class);
-
-        foreach ($service->getCachedPages() as $cacheKey) {
-            Cache::forget($cacheKey);
-        }
-
-        $service->clearCachedPages();
+        $service->flushCacheTag();
     }
 }
+
+// class ProjectObserver
+// {
+//     public function saved(Project $project)
+//     {
+//         $this->clearCachedPages();
+//     }
+
+//     public function deleted(Project $project)
+//     {
+//         $this->clearCachedPages();
+//     }
+
+//     protected function clearCachedPages()
+//     {
+//         $service = app(\App\Services\ProjectService::class);
+
+//         foreach ($service->getCachedPages() as $cacheKey) {
+//             Cache::forget($cacheKey);
+//         }
+
+//         $service->clearCachedPages();
+//     }
+// }

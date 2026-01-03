@@ -6,48 +6,44 @@ use App\Repositories\ProjectRepository;
 use App\Traits\Cachable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Pagination\LengthAwarePaginator;
 class ProjectService
 {
     // Traits
     use Cachable;
 
-    // caching
-    protected string $cachedPagesKey = 'project_cached_pages';
+    // Tag name for projects
+    protected const CACHE_TAG = 'projects';
 
     public function __construct(
         protected ProjectRepository $repository
     ) {}
 
-    public function list(int $perPage = 20)
+    public function list(int $perPage = 20): LengthAwarePaginator
     {
         $page = request('page', 1);
         $cacheKey = "projects_page_{$perPage}_{$page}";
 
-        $this->addCachedPage($cacheKey);
-
-        return $this->cacheRemember($cacheKey, function () use ($perPage) {
-            return $this->repository->findAllPaginated($perPage);
-        });
+        return $this->cacheRememberWithTags(
+            $cacheKey,
+            fn () => $this->repository->findAllPaginated($perPage),
+            self::CACHE_TAG
+        );
     }
     /**
-     * Track cached pages for invalidation
+     * Cache remember with tags (O(1) invalidation)
      */
-    protected function addCachedPage(string $cacheKey): void
+    protected function cacheRememberWithTags(string $key, callable $callback, string $tag, int $ttl = 3600)
     {
-        $cachedPages = Cache::get($this->cachedPagesKey, []);
-        if (!in_array($cacheKey, $cachedPages)) {
-            $cachedPages[] = $cacheKey;
-            Cache::forever($this->cachedPagesKey, $cachedPages);
-        }
+        return Cache::tags([$tag])->remember($key, $ttl, $callback);
     }
-    public function getCachedPages(): array
+
+    /**
+     * Flush all caches for this tag
+     */
+    public function flushCacheTag(): void
     {
-        return Cache::get($this->cachedPagesKey, []);
-    }
-    public function clearCachedPages(): void
-    {
-        Cache::forget($this->cachedPagesKey);
+        Cache::tags([self::CACHE_TAG])->flush();
     }
 
     public function find(int $id)

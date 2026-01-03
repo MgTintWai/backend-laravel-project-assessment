@@ -25,6 +25,11 @@ trait Cachable
         return Cache::remember($key, $ttl, $callback);
     }
 
+    public function cacheRememberWithTags(string $key, callable $callback, string|array $tags, int $ttl = 3600)
+    {
+        return Cache::tags((array) $tags)->remember($key, $ttl, $callback);
+    }
+
     public function cacheForget(string $key)
     {
         Cache::forget($key);
